@@ -6,15 +6,19 @@ fixed weight capacity, deciding whether to take an item or leave it (0/1)
 or take fractions (Fractional Knapsack)
 """
 
-from typing import Callable, List
-from random import choices
+from typing import Callable, List, Tuple
+from random import * 
 from collections import namedtuple  
 
 
 Genome = List[int] # induviduals, represented as lists of 0s and 1s
 Population = List[Genome] # one population is a list of genomes!
 Thing = namedtuple("Thing", ["name", "value", "weight"]) # Thing(value, weight)
+PopulateFunc = Callable[[Genome], int]
+SelectionFunc = Callable[[Population, FitnessFunc], Tuple[Genome, Genome]]
 FitnessFunc = Callable[[Genome], int] # a function that takes a genome and returns an int (fitness score)
+CrossoverFunc = Callable[[Genome, Genome], Tuple[Genome, Genome]]
+MutationFunc = Callable[[Genome], Genome]
 
 things = [
     Thing('Laptop',value=500, weight=2200), 
@@ -56,3 +60,65 @@ def selection_pair(population: Population, fitness_func: FitnessFunc) -> Populat
         weights=[fitness_func(genome) for genome in population],# build a list of fitness scores for each genome
         k=2 
     )  
+
+def single_point_crossover(a: Genome, b: Genome) -> Tuple[Genome, Genome]: 
+    if len(a) != len(b):
+        raise ValueError("Genomes a and b must be of the same length")
+    
+    length = len(a)
+    if length < 2:
+        return a, b  # no crossover possible if genome is too short
+    
+    p = randint(1, length - 1)
+    return a[0:p] + b[p:], b[0:p] + a[p:]  
+
+def mutation(genome: Genome, num: int = 1, probability: float = 0.5) -> Genome:
+    for _ in range(num): 
+        index = randrange(len(genome))
+        genome[index] = genome[index] if random() > probability else abs(genome[index] -1)
+    return genome
+
+
+def run_evolution(
+    populate_func: PopulateFunc,
+    fitness_func: FitnessFunc,
+    fitness_limit: int,
+    selection_func: SelectionFunc = selection_pair,
+    crossover_func: CrossoverFunc = single_point_crossover,
+    mutation_func: MutationFunc = mutation,
+    generation_limit: int = 100,
+ ) -> Tuple[Population, int]:
+    population = populate_func()
+    for i in range(generation_limit): 
+        population = populate_func()
+        
+        for i in range(generation_limit): 
+            population = sorted(
+                population, 
+                key=lambda genome: fitness_func(genome),
+                reverse=True
+            )
+
+        if fitness_func(population[0]) >= fitness_limit: 
+            break
+        next_generation = population[0:2] 
+
+        for j in range(int(len(population) / 2) - 1): 
+            parents = selection_func(population, fitness_func)
+            offspring_a, offspring_b = crossover_func(parents[0], parents[1])
+            offspring_a = mutation_func(offspring_a)
+            offspring_b = mutation_func(offspring_b)
+            next_generation += [offspring_a, offspring_b]
+
+        population = next_generation 
+
+    population = sorted(
+        population, 
+        key=lambda genome: fitness_func(genome),
+        reverse=True
+    )
+
+    return population, i
+            
+
+        
