@@ -19,6 +19,10 @@ def validate_nnscores(params: Dict[str, Any], printout: str) -> str:
     Raises:
     :raises NotImplementedError: If NN1 or NN2 scripts are not found
     """
+    scoring_choice = params.get("scoring_choice", "VINA")
+    if scoring_choice not in ["NN1", "NN2"]:
+        return printout
+
     if not os.path.exists(params["nn1_script"]) and not os.path.exists(
         params["nn1_script"].replace('"', "")
     ):
@@ -43,14 +47,14 @@ def validate_nnscores(params: Dict[str, Any], printout: str) -> str:
         raise NotImplementedError(printout)
 
     # CHECK THAT NN1/NN2 are using only traditional Vina Docking
-    if params["scoring_choice"] in ["NN1", "NN2"]:
-        if params["dock_choice"] != "VinaDocking":
+    if scoring_choice in ["NN1", "NN2"]:
+        if params.get("dock_choice", "VINA") != "VinaDocking":
             # printout =
             _nnscore_mgltools_conversion_warning(
                 "\nPlease switch dock_choice option to VinaDocking"
             )
         # IF ALTERNATIVE CONVERSION OF PDB2PDBQT CHECK THAT NN1/NN2 are using only MGLTOOLS
-        if params["conversion_choice"] != "MGLToolsConversion":
+        if params.get("conversion_choice", "MGLToolsConversion") != "MGLToolsConversion":
             # printout =
             _nnscore_mgltools_conversion_warning(
                 "Please switch conversion_choice option to MGLToolsConversion"
