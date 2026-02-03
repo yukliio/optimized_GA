@@ -6,9 +6,12 @@ fixed weight capacity, deciding whether to take an item or leave it (0/1)
 or take fractions (Fractional Knapsack)
 """
 
+import time
 from typing import Callable, List, Tuple
 from random import * 
-from collections import namedtuple  
+from collections import namedtuple
+from functools import partial
+
 
 
 Genome = List[int] # induviduals, represented as lists of 0s and 1s
@@ -87,38 +90,57 @@ def run_evolution(
     crossover_func: CrossoverFunc = single_point_crossover,
     mutation_func: MutationFunc = mutation,
     generation_limit: int = 100,
- ) -> Tuple[Population, int]:
+) -> Tuple[Population, int]:
+
     population = populate_func()
-    for i in range(generation_limit): 
-        population = populate_func()
-        
-        for i in range(generation_limit): 
-            population = sorted(
-                population, 
-                key=lambda genome: fitness_func(genome),
-                reverse=True
-            )
 
-        if fitness_func(population[0]) >= fitness_limit: 
+    for generation in range(generation_limit):
+
+        population = sorted(
+            population,
+            key=lambda genome: fitness_func(genome),
+            reverse=True
+        )
+
+        if fitness_func(population[0]) >= fitness_limit:
             break
-        next_generation = population[0:2] 
 
-        for j in range(int(len(population) / 2) - 1): 
+        next_generation = population[0:2]  # elitism
+
+        for _ in range(int(len(population) / 2) - 1):
             parents = selection_func(population, fitness_func)
             offspring_a, offspring_b = crossover_func(parents[0], parents[1])
-            offspring_a = mutation_func(offspring_a)
-            offspring_b = mutation_func(offspring_b)
-            next_generation += [offspring_a, offspring_b]
+            next_generation.append(mutation_func(offspring_a))
+            next_generation.append(mutation_func(offspring_b))
 
-        population = next_generation 
+        population = next_generation
 
-    population = sorted(
-        population, 
-        key=lambda genome: fitness_func(genome),
-        reverse=True
-    )
+    return population, generation
 
-    return population, i
-            
+
+start = time.time()
+population, generations = run_evolution(
+    population_func = partial(
+        generate_population, size=10, genome_length=len(things)
+    ), 
+    fitness_func=partial(
+        fitness, things=things,weight_limit=3000
+    ),
+    fitness_limit=740, 
+    generation_limit=100
+)
+
+end = time.time()
+
+def genome_to_things(genome: Genome, things: [Thing]) -> [Thing]: 
+    result = []
+    for i, thing in enumerate(things): 
+        if genome[i] == 1: 
+            result += [thing.name]
+    return result
+
+print(f"number of generations: {generations}")
+print(f"time: {end - start} seconds")
+print(f"best solution: {genome_to_things(population[0], things)}")
 
         
