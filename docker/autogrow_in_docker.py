@@ -148,10 +148,12 @@ def adjust_dockerfile() -> None:
         f.write(printout)
 
 
-def make_docker() -> None:
+def make_docker(no_cache: bool = False) -> None:
     """
     This will create the docker to run AutoGrow4.
     This is also where all of the files are copied into the image.
+    Do not run 'docker build' directly: this script creates ./autogrow4 and
+    ./temp_user_files first; without them the build would fail.
 
     If docker image can not be created it will raise an exception.
     """
@@ -170,8 +172,8 @@ def make_docker() -> None:
 
     print(printout)
     try:
-        # Force rebuild so Dockerfile changes are picked up
-        os.system(f"docker build --no-cache -t autogrow4 . > {log_file}")
+        no_cache_flag = " --no-cache" if no_cache else ""
+        os.system(f"docker build{no_cache_flag} -t autogrow4 . > {log_file}")
     except Exception as e:
         printout = (
             "\nCan not create a docker file. Please make sure to run the "
@@ -611,8 +613,8 @@ def run_autogrow_docker_main(params: Dict[str, Any]) -> None:
     # 3) make a JSON file with modified information for within docker
     json_vars, outfolder_path, run_num = handle_json_info(params)
 
-    # Run build docker image
-    make_docker()
+    # Run build docker image (script creates autogrow4/ and temp_user_files/ first)
+    make_docker(no_cache=params.get("no_cache", False))
 
     # Run part 5) run AutoGrow in the container
     print("\nRunning AutoGrow4 in Docker")
@@ -640,6 +642,13 @@ PARSER.add_argument(
     Overrides other arguments. This takes all the parameters described in \
     run_autogrow.py. MGLTools and openbabel paths can be ignored as they are \
     already installed in the docker image.",
+)
+PARSER.add_argument(
+    "--no-cache",
+    action="store_true",
+    dest="no_cache",
+    help="Run 'docker build --no-cache' to force a full image rebuild (slower). \
+    Use after changing the Dockerfile or AutoGrow code.",
 )
 PARSER.add_argument(
     "--override_sudo_admin_privileges",

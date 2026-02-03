@@ -12,10 +12,12 @@ def config_multiprocessing(params: Dict[str, Any]) -> Dict[str, Any]:
     """
 
     # Handle Serial overriding number_of_processors
-    # serial fixes it to 1 processor
-    if params["multithread_mode"].lower() == "serial":
+    # serial fixes it to 1 processor (use .get in case JSON omits these)
+    multithread_mode = params.get("multithread_mode", "multithreading")
+    params["multithread_mode"] = multithread_mode
+    if multithread_mode.lower() == "serial":
         params["multithread_mode"] = "serial"
-        if params["number_of_processors"] != 1:
+        if params.get("number_of_processors", 1) != 1:
             print(
                 "Because --multithread_mode was set to serial, "
                 + "this will be run on a single processor."
@@ -23,7 +25,7 @@ def config_multiprocessing(params: Dict[str, Any]) -> Dict[str, Any]:
         params["number_of_processors"] = 1
 
     # Handle mpi errors if mpi4py isn't installed
-    if params["multithread_mode"].lower() == "mpi":
+    if multithread_mode.lower() == "mpi":
         params["multithread_mode"] = "mpi"
         try:
             import mpi4py  # type: ignore
@@ -53,9 +55,9 @@ def config_multiprocessing(params: Dict[str, Any]) -> Dict[str, Any]:
     )
 
     # launch mpi workers
-    if params["multithread_mode"] == "mpi":
+    if params.get("multithread_mode", "multithreading") == "mpi":
         params["parallelizer"] = Parallelizer(
-            params["multithread_mode"], params["number_of_processors"]
+            params["multithread_mode"], params.get("number_of_processors", 1)
         )
 
         if params["parallelizer"] is None:
@@ -65,7 +67,8 @@ def config_multiprocessing(params: Dict[str, Any]) -> Dict[str, Any]:
 
     else:
         params["parallelizer"] = Parallelizer(
-            params["multithread_mode"], params["number_of_processors"], True
+            params.get("multithread_mode", "multithreading"),
+            params.get("number_of_processors", 1), True
         )
 
     return params

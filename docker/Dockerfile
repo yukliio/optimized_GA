@@ -60,6 +60,8 @@ ADD ./temp_user_files /UserFiles
 ADD ./run_autogrow_in_container.bash /autogrow/run_autogrow_in_container.bash
 RUN chmod -R a+rwx /autogrow/run_autogrow_in_container.bash
 ADD ./run_autogrow_in_container_windows.bash /autogrow/run_autogrow_in_container_windows.bash
+# Strip CR (Windows line endings) so bash in Linux does not see \r as part of commands
+RUN sed -i 's/\r$//' /autogrow/run_autogrow_in_container_windows.bash
 RUN chmod -R a+rwx /autogrow/run_autogrow_in_container_windows.bash
 
 # Make directories for mounted host file systems
