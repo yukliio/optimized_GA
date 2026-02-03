@@ -1,7 +1,9 @@
-# Get the base image from ubuntu
-FROM ubuntu:18.04
+# Get the base image from ubuntu (20.04+ needed: Miniconda requires GLIBC >= 2.28)
+FROM ubuntu:20.04
 
-MAINTAINER Jacob Durrant <durrantj@pitt.edu>
+LABEL maintainer="Jacob Durrant <durrantj@pitt.edu>"
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Install programs through apt-get
 RUN apt-get -yqq update
@@ -57,10 +59,11 @@ RUN mkdir /Outputfolder
 
 
 RUN ls autogrow4
-ENTRYPOINT ["bash", "/autogrow/run_autogrow_in_container.bash"]
+# ENTRYPOINT ["bash", "/autogrow/run_autogrow_in_container.bash"]
+ENTRYPOINT ["bash", "/autogrow/run_autogrow_in_container_windows.bash"]
+
 
 # Windows version. Automatically turned on by autogrow_in_docker.py
-# ENTRYPOINT ["bash", "/autogrow/run_autogrow_in_container_windows.bash"]
 
 
 # ENTRYPOINT ["bash"]
