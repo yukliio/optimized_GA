@@ -527,7 +527,7 @@ class VinaDocking(ParentDocking):
         ranked_smi_file_prev_gen: str,
         current_generation_dir: str,
         current_gen_int: int,
-        smiles_list: list[CompoundInfo],
+        smiles_list: List[CompoundInfo],
     ):
         print("Getting ligand scores from the previous generation")
 

@@ -4,7 +4,7 @@ This is used as the basis for all scoring/rescoring classes.
 """
 import __future__
 from abc import ABC, abstractmethod
-from typing import Union
+from typing import List, Union
 
 
 class ParentScoring(ABC):
@@ -22,7 +22,7 @@ class ParentScoring(ABC):
         return self.__class__.__name__
 
     @abstractmethod
-    def run_scoring(self, file_path: str) -> Union[list[str], None]:
+    def run_scoring(self, file_path: str) -> Union[List[str], None]:
         """
         run_scoring is needs to be implemented in each class.
 

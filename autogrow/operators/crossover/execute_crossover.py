@@ -87,8 +87,10 @@ def test_for_mcs(
 
 
 def find_random_lig2(
-    params: Dict[str, Any], ligands_list: List[List[str]], ligand1_pair: List[str]
-) -> Union[List[str], None]:
+    params: Dict[str, Any],
+    ligands_list: List[Union[List[str], CompoundInfo]],
+    ligand1_pair: Union[List[str], CompoundInfo],
+) -> Union[Union[List[str], CompoundInfo], None]:
     """
     Pick a random molecule from the list and check that it can be converted
     into a rdkit mol object and then test for a satistifactory Most common
@@ -115,19 +117,24 @@ def find_random_lig2(
     random.shuffle(shuffled_num_list)
 
     # Convert lig1 into an RDkit mol
-    lig1_string = ligand1_pair[0]
+    lig1_string = (
+        ligand1_pair.smiles if isinstance(ligand1_pair, CompoundInfo) else ligand1_pair[0]
+    )
     lig1_mol = convert_mol_from_smiles(lig1_string)
 
     while count < len(ligands_list) - 1:
         rand_num = shuffled_num_list[count]
         mol2_pair = ligands_list[rand_num]
 
-        if mol2_pair[0] == lig1_string:
+        mol2_string = (
+            mol2_pair.smiles if isinstance(mol2_pair, CompoundInfo) else mol2_pair[0]
+        )
+        if mol2_string == lig1_string:
             count += 1
             continue
 
         # Convert lig1 into an RDkit mol
-        lig_2_string = mol2_pair[0]
+        lig_2_string = mol2_string
         lig2_mol = convert_mol_from_smiles(lig_2_string)
 
         if lig2_mol is None:
@@ -270,8 +277,12 @@ def make_crossovers(
                 child_lig_smile = i[0]
 
                 # get the ID for the parent of a child mol
-                parent_lig1_id = i[1][1]
-                parent_lig_2_id = i[2][1]
+                parent_lig1_id = (
+                    i[1].name if isinstance(i[1], CompoundInfo) else i[1][1]
+                )
+                parent_lig_2_id = (
+                    i[2].name if isinstance(i[2], CompoundInfo) else i[2][1]
+                )
 
                 # get the unique ID (last few diget ID of the parent mol)
                 parent_lig1_id = parent_lig1_id.split(")")[-1]
@@ -285,8 +296,12 @@ def make_crossovers(
                 # fill lists of all smiles and smile_id's of all previously
                 # made smiles in this generation
                 for x in new_ligands_list:
-                    list_of_already_made_smiles.append(x[0])
-                    list_of_already_made_id.append(x[1])
+                    if isinstance(x, CompoundInfo):
+                        list_of_already_made_smiles.append(x.smiles)
+                        list_of_already_made_id.append(x.name)
+                    else:
+                        list_of_already_made_smiles.append(x[0])
+                        list_of_already_made_id.append(x[1])
 
                 if child_lig_smile not in list_of_already_made_smiles:
                     # if the smiles string is unique to the list of previous
@@ -329,8 +344,10 @@ def make_crossovers(
 
 
 def run_smiles_merge_prescreen(
-    params: Dict[str, Any], ligands_list: List[List[str]], ligand1_pair: List[str]
-) -> Optional[List[str]]:
+    params: Dict[str, Any],
+    ligands_list: List[Union[List[str], CompoundInfo]],
+    ligand1_pair: Union[List[str], CompoundInfo],
+) -> Optional[Union[List[str], CompoundInfo]]:
     """
     This function runs a series of functions to find two molecules with a
     sufficient amount of shared common structure (most common structure = MCS)
@@ -351,7 +368,9 @@ def run_smiles_merge_prescreen(
         found return None.
     """
 
-    ligand_1_string = ligand1_pair[0]
+    ligand_1_string = (
+        ligand1_pair.smiles if isinstance(ligand1_pair, CompoundInfo) else ligand1_pair[0]
+    )
 
     # check if ligand_1 can be converted to an rdkit mol
     lig1 = convert_mol_from_smiles(ligand_1_string)
@@ -364,7 +383,9 @@ def run_smiles_merge_prescreen(
 
 
 def do_crossovers_smiles_merge(
-    params: Dict[str, Any], lig1_smile_pair: List[str], ligands_list: List[List[str]]
+    params: Dict[str, Any],
+    lig1_smile_pair: Union[List[str], CompoundInfo],
+    ligands_list: List[Union[List[str], CompoundInfo]],
 ) -> Optional[List[Union[str, List[str]]]]:
     """
     This function will take the list of ligands to work on and the number in
@@ -401,8 +422,14 @@ def do_crossovers_smiles_merge(
     if lig2_pair is None:
         return None
 
-    ligand_1_string = lig1_smile_pair[0]
-    ligand_2_string = lig2_pair[0]
+    ligand_1_string = (
+        lig1_smile_pair.smiles
+        if isinstance(lig1_smile_pair, CompoundInfo)
+        else lig1_smile_pair[0]
+    )
+    ligand_2_string = (
+        lig2_pair.smiles if isinstance(lig2_pair, CompoundInfo) else lig2_pair[0]
+    )
 
     counter = 0
     while counter < 3:

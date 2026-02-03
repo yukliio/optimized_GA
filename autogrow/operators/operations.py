@@ -534,23 +534,33 @@ def test_source_smiles_convert(smile_info: List[str]) -> Union[List[str], str]:
     :returns: str printout: If it failed to convert it returns the error
         message. This passess out to prevent MPI print issues
     """
-    if smile_info is None or not smile_info:
+    if smile_info is None:
         printout = (
             "REMOVING SMILES FROM SOURCE LIST: Blank "
             + "entry in source compound list.\n"
         )
         return f"{printout}\tRemoving: {smile_info}"
-    if len(smile_info) == 1:
+    if not isinstance(smile_info, CompoundInfo) and not smile_info:
         printout = (
-            "REMOVING SMILES FROM SOURCE LIST: Unformatted or blank "
+            "REMOVING SMILES FROM SOURCE LIST: Blank "
             + "entry in source compound list.\n"
         )
-        printout += f"\tRemoving: {smile_info}"
-        return printout
+        return f"{printout}\tRemoving: {smile_info}"
 
-    # separate out SMILES str and ID
-    smile_str = smile_info[0]
-    smile_id = str(smile_info[1])
+    # Support both list [smiles, id, ...] and CompoundInfo (dataclass)
+    if isinstance(smile_info, CompoundInfo):
+        smile_str = smile_info.smiles
+        smile_id = str(smile_info.name)
+    else:
+        if len(smile_info) == 1:
+            printout = (
+                "REMOVING SMILES FROM SOURCE LIST: Unformatted or blank "
+                + "entry in source compound list.\n"
+            )
+            printout += f"\tRemoving: {smile_info}"
+            return printout
+        smile_str = smile_info[0]
+        smile_id = str(smile_info[1])
 
     if type(smile_str) is not type(""):
         printout = (
@@ -684,8 +694,11 @@ def get_complete_list_prev_gen_or_source_compounds(
         job_input, test_source_smiles_convert
     )
     usable_list_of_smiles = [x for x in usable_list_of_smiles if x is not None]
-    print_errors = [x for x in usable_list_of_smiles if type(x) is str]
-    usable_list_of_smiles = [x for x in usable_list_of_smiles if type(x) is list]
+    print_errors = [x for x in usable_list_of_smiles if isinstance(x, str)]
+    # Keep both list (legacy) and CompoundInfo (dataclass) results
+    usable_list_of_smiles = [
+        x for x in usable_list_of_smiles if isinstance(x, (list, CompoundInfo))
+    ]
     for x in print_errors:
         print(x)
 
@@ -1137,7 +1150,10 @@ def save_ligand_list(
     # save to a new output smiles file. ie. save to ranked_smiles_file
     with open(output_file_name, "w") as output:
         for chosen_ligand in list_of_chosen_ligands:
-            output_line = "\t".join(chosen_ligand.to_list()) + "\n"
+            if isinstance(chosen_ligand, CompoundInfo):
+                output_line = "\t".join(chosen_ligand.to_list()) + "\n"
+            else:
+                output_line = "\t".join(str(x) for x in chosen_ligand) + "\n"
             output.write(output_line)
 
     sys.stdout.flush()
