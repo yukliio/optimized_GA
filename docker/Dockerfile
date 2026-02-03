@@ -24,6 +24,9 @@ RUN echo "alias python=/root/miniconda3/bin/python" >> /root/.bashrc
 RUN echo "alias conda=/root/miniconda3/bin/conda" >> /root/.bashrc
 RUN echo "alias pip=/root/miniconda3/bin/pip" >> /root/.bashrc
 
+# Accept Anaconda Terms of Service (required by recent Miniconda for default channels)
+RUN /root/miniconda3/bin/conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main && \
+    /root/miniconda3/bin/conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 
 # Get python dependencies
 RUN /root/miniconda3/bin/conda install -y -c conda-forge rdkit rdkit=2020.03.1
