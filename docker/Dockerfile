@@ -1,3 +1,4 @@
+# AutoGrow4 Dockerfile - uses Python 3.8 env for rdkit (do not install rdkit in base)
 # Get the base image from ubuntu (20.04+ needed: Miniconda requires GLIBC >= 2.28)
 FROM ubuntu:20.04
 
@@ -28,17 +29,21 @@ RUN echo "alias pip=/root/miniconda3/bin/pip" >> /root/.bashrc
 RUN /root/miniconda3/bin/conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main && \
     /root/miniconda3/bin/conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 
-# Get python dependencies
-RUN /root/miniconda3/bin/conda install -y -c conda-forge rdkit rdkit=2020.03.1
-RUN /root/miniconda3/bin/conda install -y numpy numpy=1.18.1
-RUN /root/miniconda3/bin/conda install -y scipy scipy=1.4.1
-RUN /root/miniconda3/bin/pip install matplotlib==3.2.1
-RUN /root/miniconda3/bin/pip install func_timeout==4.3.5
+# rdkit 2020.03.1 requires Python <3.9; Miniconda-latest ships Python 3.13. Create env with Python 3.8.
+RUN /root/miniconda3/bin/conda create -n autogrow python=3.8 -y
 
-# Install mgltools
-RUN wget http://mgltools.scripps.edu/downloads/downloads/tars/releases/REL1.5.6/mgltools_x86_64Linux2_1.5.6.tar.gz
-RUN tar xvfz *.tar.gz
-RUN rm *.tar.gz
+# Get python dependencies in the autogrow env
+RUN /root/miniconda3/bin/conda install -n autogrow -y -c conda-forge rdkit=2020.03.1
+RUN /root/miniconda3/bin/conda install -n autogrow -y numpy=1.18.1 scipy=1.4.1
+RUN /root/miniconda3/envs/autogrow/bin/pip install matplotlib==3.2.1 func_timeout==4.3.5
+
+# Use autogrow env by default (rdkit-compatible Python 3.8)
+ENV PATH="/root/miniconda3/envs/autogrow/bin:$PATH"
+
+# Install mgltools (use current Scripps URL; old mgltools.scripps.edu returns HTML)
+RUN wget -q -O mgltools_x86_64Linux2_1.5.6.tar.gz "https://ccsb.scripps.edu/mgltools/download/495/" \
+    && tar xvfz mgltools_x86_64Linux2_1.5.6.tar.gz \
+    && rm mgltools_x86_64Linux2_1.5.6.tar.gz
 RUN cd /mgltool*/ && \
     ./install.sh
 # RUN echo "alias python=/mgltools*/bin/pythonsh" >> /root/.bashrc

@@ -170,7 +170,8 @@ def make_docker() -> None:
 
     print(printout)
     try:
-        os.system(f"docker build -t autogrow4 . > {log_file}")
+        # Force rebuild so Dockerfile changes are picked up
+        os.system(f"docker build --no-cache -t autogrow4 . > {log_file}")
     except Exception as e:
         printout = (
             "\nCan not create a docker file. Please make sure to run the "
