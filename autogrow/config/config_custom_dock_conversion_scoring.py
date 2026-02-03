@@ -21,27 +21,30 @@ def setup_custom_dock_and_conversion_scoring_options(
     Returns:
     :returns: dict params: Dictionary of User variables with the added options
     """
+    conversion_choice = params.get("conversion_choice", "MGLToolsConversion")
+    dock_choice = params.get("dock_choice", "VINA")
+    scoring_choice = params.get("scoring_choice", "VINA")
     if (
-        params["conversion_choice"] != "Custom"
-        and params["dock_choice"] != "Custom"
-        and params["scoring_choice"] != "Custom"
+        conversion_choice != "Custom"
+        and dock_choice != "Custom"
+        and scoring_choice != "Custom"
     ):
         # It's not a custom approach.
         return params
 
     master_need_restart = False
     master_printout = ""
-    if params["conversion_choice"] == "Custom":
+    if conversion_choice == "Custom":
         params, need_restart, printout = _setup_custom_conversion_script(params)
         if need_restart is True:
             master_need_restart = True
             master_printout += printout
-    if params["dock_choice"] == "Custom":
+    if dock_choice == "Custom":
         params, need_restart, printout = _setup_custom_docking_script(params)
         if need_restart is True:
             master_need_restart = True
             master_printout = master_printout + printout
-    if params["scoring_choice"] == "Custom":
+    if scoring_choice == "Custom":
         params, need_restart, printout = _setup_custom_scoring_script(params)
         if need_restart is True:
             master_need_restart = True

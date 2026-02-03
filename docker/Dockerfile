@@ -32,8 +32,8 @@ RUN /root/miniconda3/bin/conda tos accept --override-channels --channel https://
 # Project tested with 3.6/3.7; use 3.8 for conda availability. RDKit via pip to avoid conda Boost symbol bug.
 RUN /root/miniconda3/bin/conda create -n autogrow python=3.8 -y
 
-# Use pip for rdkit (wheel bundles deps, avoids conda boost undefined symbol); other deps per README
-RUN /root/miniconda3/envs/autogrow/bin/pip install rdkit==2020.03.1 numpy==1.18.1 scipy==1.4.1 matplotlib==3.2.1 func_timeout==4.3.5
+# PyPI has no rdkit 2020.03.1 for Linux; use 2022.3.5 (API compatible, wheel bundles Boost)
+RUN /root/miniconda3/envs/autogrow/bin/pip install rdkit==2022.3.5 numpy==1.18.1 scipy==1.4.1 matplotlib==3.2.1 func_timeout==4.3.5
 
 # Use autogrow env by default
 ENV PATH="/root/miniconda3/envs/autogrow/bin:$PATH"

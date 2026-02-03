@@ -21,8 +21,8 @@ def config_mgltools(params: Dict[str, Any]) -> None:
         # Not set to use mgltools
         return
 
-    # find other mgltools-related scripts
-    if params["prepare_ligand4.py"] == "":
+    # find other mgltools-related scripts (use .get in case JSON omits these)
+    if params.get("prepare_ligand4.py", "") == "":
         params["prepare_ligand4.py"] = (
             params["mgltools_directory"]
             + "MGLToolsPckgs"
